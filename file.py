@@ -13,7 +13,7 @@ def covert(upload,download):
     image_name = os.listdir(upload_a)
     for image in image_name:
          image_read = Image.open(os.path.join(upload_a,image))
-         image_string = tss.image_to_string(image_read)
+         image_string = tss.image_to_string(image_read,lang="ben+ara")
 
          text_file = re.sub(r'\.png', '.text', image)
          string_file = open(os.path.join(download_a,text_file),'w')
@@ -28,4 +28,4 @@ def covert(upload,download):
 
 
 
-covert('/home/ahsan/Documents/python/18','/home/ahsan/Documents/তাফসিরে মারেফুল কুরআন/1/1')
+covert(pc[1],pc[2])
