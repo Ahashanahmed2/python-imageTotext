@@ -12,76 +12,142 @@ const { urlencoded, json } = require("body-parser");
 const { default: axios } = require("axios");
 app.use(urlencoded({ extended: true }));
 app.use(json())
-
+const si = require('systeminformation');
 //sockat io
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+const { time } = require("console");
 const io = new Server(server);
 
-io.on("connection",(con)=>{
+io.on("connection", (con) => {
+
+ 
   console.log('con')
 })
 
 
 
-app.post("/",(req, res) => {
-
-  let upload = req.body.upload;
-  let download = req.body.download;
-   
 
 
-   const process = spawn('python3', ['file.py',upload,download])
-   process.stdout.on('data', function (data) {
-   
+async function pp(){
+  let ab =''
+await si.currentLoad(cb=>ab = cb.currentLoad)
+
+  io.emit("curren",ab)
+
+}
+
+
+setInterval(()=>{
+  pp()
+},1000)
+
+
+
+
+
+
+
+
+app.post("/", (req, res) => {
+
+
+
+let lan ='';
+
+if(req.body.language.length == 1){
+  
+lan = req.body.language.toString()
+
+}else{
+ let l = req.body.language
+ 
+let ll = l.join('+');
+
+lan = ll;
+
+}
+
+
+
+  let upload = req.body.name.upload;
+  let download = req.body.name.download;
+
+if(/\/$/i.test(upload)){
+let cc = upload.substr(0,upload.length -1)
+upload = cc
+
+
+}else if (/\/$/i.test(download)) {
+  let dd = download.substr(0,download.length -1)
+download = dd
+} 
+
+
+let clearInter = setInterval(()=>{
+  tim()
+},1000)
+  
+  const process = spawn('python3', ['file.py', upload, download,lan])
+  process.stdout.on('data', function (data) {
+
     let aa = data.toString()
-   
+
     let bb = aa.split('\n')
-   
-   
-   
+
     fs.readdir(path.join(upload), (err, dat) => {
       err && console.log({ message: err })
-      if (dat.length == bb.length - 1) {
 
-        let up = { upload: dat, download: bb, len: bb.length - 1 } //send_data
-     
-          
+      let dat_array = []
+
+      dat.forEach(v => {
+
+
+        if (/\.(jpe?g|png)$/.test(v)) {
+
+          dat_array.push(v)
+        }
+
+      })
+
+      if (dat_array.length == bb.length - 1) {
+
+        let up = { upload: dat_array, download: bb, len: bb.length - 1 } //send_data
+
         ff(up)
-        
-      
-        console.log("convert is complited")
+
       }
-      
-   
-   
-   
     })
-    function ff(up){
-      io.emit("send_data",up)
+    function ff(up) {
+      io.emit("send_data", up)
     }
-   })
-   process.on('close', (err) => { console.log({ message: err }) })
-   
-
-
-
+  })
+  process.on('close', (err) =>{
+    clearInterval(clearInter)
+    io.emit("converted_err", err)})
   res.send('upd')
-})
 
 
-    
-  
+
+}  )
+
+
 
 app.get("/", (req, res) => {
-
- 
- 
-
-
+  
   res.render("index.ejs");
 });
+
+function tim(){
+ 
+  io.emit('timeset',1)
+
+}
+
+
+
+
 
 // let array = [
 //   "তাফসিরে মারেফুল কুরআন",
@@ -167,6 +233,7 @@ app.get("/", (req, res) => {
 
 
 // }
+
 
 
 server.listen(port, () => {
